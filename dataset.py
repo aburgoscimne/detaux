@@ -19,6 +19,8 @@ class DetDataset(Dataset):
         image_id = os.path.splitext(self.images[idx])[0]
         
         target = {}
+        target['boxes'] = []
+        target['labels'] = []
         if self.split != 'test':
             boxes, labels = self.get_image_boxes_and_labels(image_id)
             target['boxes'] = boxes

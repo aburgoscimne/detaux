@@ -67,9 +67,10 @@ class DetAux():
 
         for i in range(0,len(images)):
             image = reverse_to_tensor(images[i])
-            boxes = targets[i]['boxes'].numpy()
-            labels = targets[i]['labels'].numpy()
-            self.draw_bounding_boxes(image, boxes, labels)
+            if len(targets[i]['boxes']) > 0:
+                boxes = targets[i]['boxes'].numpy()
+                labels = targets[i]['labels'].numpy()
+                self.draw_bounding_boxes(image, boxes, labels)
             self.show_image(image, image_id=idxs[i])
 
 def set_seed(seed):
