@@ -30,6 +30,7 @@ class DetAux():
         labels : 2D list
         """
 
+        # OpenCV works with x1y1wh format
         boxes = x1y1x2y2_to_x1y1wh(boxes)
 
         for i,b in enumerate(boxes):
@@ -45,18 +46,31 @@ class DetAux():
             # cv2.rectangle(image, (x,y), (x+text_size[0]+1,y+text_size[1]+3), box_color, -1)
             # cv2.putText(image, self.reverse_classes_map[labels[i]], (x,y+text_size[1]+2), cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1)
 
-    def show_image(self, image, size=(8,8), show_legend=True):
+    def show_image(self, image, size=(8,8), show_legend=True, image_id=None):
         """Show a loaded image"""
         plt.figure(figsize=size)
         plt.imshow(image)
+
+        if image_id is not None:
+            plt.title(image_id)
 
         if show_legend:
             patches = []
             for c in self.classes:
                 color = self.classes_color_map[c]
-                color = [x/255 for x in color]
+                color = [x/255 for x in color] # Patch requires normalized RGB
                 patches.append(mpatches.Patch(color=color, label=c))
             plt.legend(handles=patches)
+
+    def show_batch_of_images(self, data_loader):
+        images, targets, idxs = next(iter(data_loader))
+
+        for i in range(0,len(images)):
+            image = reverse_to_tensor(images[i])
+            boxes = targets[i]['boxes'].numpy()
+            labels = targets[i]['labels'].numpy()
+            self.draw_bounding_boxes(image, boxes, labels)
+            self.show_image(image, image_id=idxs[i])
 
 def set_seed(seed):
     """Set random seed for experiment reproducibility"""
@@ -78,6 +92,21 @@ def x1y1x2y2_to_x1y1wh(boxes):
     boxes[:,2] = boxes[:,2] - boxes[:,0]
     boxes[:,3] = boxes[:,3] - boxes[:,1]
     return boxes
+
+def x1y1wh_to_x1y1x2y2(boxes):
+    """
+    Converts boxes from x1y1wh (upper left, width and height) format 
+    to x1y1x2y2 (upper left, bottom right) format
+    """
+    x1 = boxes[:,0]
+    y1 = boxes[:,1]
+    w = boxes[:,2]
+    h = boxes[:,3]
+    x2 = x1 + w
+    y2 = y1 + h
+    boxes = torch.stack([x1,y1,x2,y2], dim=1)
+    return boxes
+
 
 def intersection_over_union(x1_p, y1_p, x2_p, y2_p, x1_g, y1_g, x2_g, y2_g):
     """Computes IoU between two boxes (predicted box and ground truth box)"""
