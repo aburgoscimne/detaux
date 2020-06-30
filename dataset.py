@@ -8,7 +8,7 @@ from ast import literal_eval
 from utils import *
 
 class DetDataset(Dataset):
-    def __init__(self, root, split):
+    def __init__(self, root, split, *args, **kwargs):
         self.root = root
         self.split = split
 
@@ -34,8 +34,8 @@ class DetDataset(Dataset):
 
 # Example using DetDataset class
 class WheatDataset(DetDataset):
-    def __init__(self, root, split):
-        super().__init__(root, split)
+    def __init__(self, root, split, *args, **kwargs):
+        super().__init__(root, split, *args, **kwargs)
         # Define images_dir path
         self.images_dir = os.path.join(root, split)
         # Define images list
