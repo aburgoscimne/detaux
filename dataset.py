@@ -18,15 +18,13 @@ class DetDataset(Dataset):
         image = FT.to_tensor(image)
         image_id = os.path.splitext(self.images[idx])[0]
         
-        target = {}
-        target['boxes'] = []
-        target['labels'] = []
+        targets = {}
+        targets['boxes'] = []
+        targets['labels'] = []
         if self.split != 'test':
-            boxes, labels = self.get_image_boxes_and_labels(image_id)
-            target['boxes'] = boxes
-            target['labels'] = labels
+            targets = self.get_targets(image_id)
 
-        return image, target, image_id
+        return image, targets, image_id
         
     def __len__(self):
         return len(self.images)
@@ -34,16 +32,20 @@ class DetDataset(Dataset):
     def collate_fn(self, batch):
         return tuple(zip(*batch))
 
+# Example using DetDataset class
 class WheatDataset(DetDataset):
     def __init__(self, root, split):
         super().__init__(root, split)
+        # Define images_dir path
         self.images_dir = os.path.join(root, split)
+        # Define images list
         self.images = list(sorted(os.listdir(self.images_dir)))
 
         if split != 'test':
             self.boxes_df = pd.read_csv(os.path.join(root, split) + '.csv')
 
-    def get_image_boxes_and_labels(self, image_id):
+    # Define targets retrieval function, it must return a dict with boxes and labels
+    def get_targets(self, image_id):
         boxes = self.boxes_df[self.boxes_df['image_id'] == image_id]['bbox'].apply(literal_eval)
         if len(boxes) > 0:
             boxes = torch.FloatTensor(list(boxes))
@@ -52,4 +54,4 @@ class WheatDataset(DetDataset):
         else:
             boxes = torch.empty((0, 4), dtype=torch.float32)
             labels = torch.empty((0), dtype=torch.int64)
-        return boxes, labels
+        return {'boxes': boxes, 'labels': labels}
