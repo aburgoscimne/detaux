@@ -62,10 +62,10 @@ class DetAux():
                 patches.append(mpatches.Patch(color=color, label=c))
             plt.legend(handles=patches)
 
-    def show_batch_of_images(self, data_loader):
+    def show_batch_of_images(self, data_loader, limit=4):
         images, targets, idxs = next(iter(data_loader))
 
-        for i in range(0,len(images)):
+        for i in range(0,min(len(images), limit)):
             image = reverse_to_tensor(images[i])
             if len(targets[i]['boxes']) > 0:
                 boxes = targets[i]['boxes'].numpy()
